@@ -1,0 +1,23 @@
+services:
+  mysql:
+    image: 'mysql:8.0.41'
+    environment:
+      - 'MYSQL_DATABASE=sample'
+      - 'MYSQL_PASSWORD=1234'
+      - 'MYSQL_ROOT_PASSWORD=1234'
+      - 'MYSQL_USER=sample'
+    ports:
+      - '33064:3306'
+    volumes:
+      - mysql_data_4:/var/lib/mysql
+
+  redis:
+    image: redis:7.4-alpine
+    ports:
+      - "63794:6379"
+    volumes:
+      - redis_data_4:/data
+
+volumes:
+  mysql_data_4:
+  redis_data_4:
