@@ -29,3 +29,7 @@ spring:
       stop:
         command: down
         timeout: 1m
+
+jwt:
+  secret:
+    key: aGVsbG9teW5hbWVpc2ppZ29vYW5kbmljZXRvbWVldHlvdXRvb2dvb2Rtb3JuaW5nc3VuYW5kbW9vbmhhdmVhbmljZWRheWhhdmVhZ29vZGRheXRvZGll # dev 용
