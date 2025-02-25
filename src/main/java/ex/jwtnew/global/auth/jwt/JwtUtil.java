@@ -1,4 +1,4 @@
-package ex.jwtnew.global.jwt;
+package ex.jwtnew.global.auth.jwt;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
