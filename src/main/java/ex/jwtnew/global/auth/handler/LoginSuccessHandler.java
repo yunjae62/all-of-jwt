@@ -1,16 +1,17 @@
 package ex.jwtnew.global.auth.handler;
 
 import ex.jwtnew.global.auth.jwt.JwtUtil;
+import ex.jwtnew.global.redis.RedisUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 
@@ -19,6 +20,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class LoginSuccessHandler implements AuthenticationSuccessHandler {
 
+    private final RedisUtil redisUtil;
     private final JwtUtil jwtUtil;
 
     @Override
@@ -40,14 +42,15 @@ public class LoginSuccessHandler implements AuthenticationSuccessHandler {
     }
 
     private void getResponseDtoWithTokensInHeader(Authentication authentication, HttpServletResponse response) {
-        UserDetails principal = (UserDetails) authentication.getPrincipal();
-        String username = principal.getUsername();
-        String role = List.of(principal.getAuthorities()).getFirst().toString();
+        String username = authentication.getName();
+        String role = List.of(authentication.getAuthorities()).getFirst().toString();
 
         String accessToken = jwtUtil.createAccessToken(username, role);
         String refreshToken = jwtUtil.createRefreshToken(username, role);
 
         response.addHeader(JwtUtil.ACCESS_TOKEN_HEADER, jwtUtil.setTokenWithBearer(accessToken));
         response.addHeader(JwtUtil.REFRESH_TOKEN_HEADER, jwtUtil.setTokenWithBearer(refreshToken));
+
+        redisUtil.set(username, refreshToken, Duration.ofSeconds(JwtUtil.REFRESH_TOKEN_TTL_SECONDS));
     }
 }
