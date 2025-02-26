@@ -15,3 +15,7 @@ Content-Type: application/json
   "username": "hi",
   "password": "1234"
 }
+
+### refresh
+POST http://localhost:8080/users/refresh
+Refresh-Token: Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJoaSIsImF1dGgiOiJbZXguand0bmV3Lmdsb2JhbC5hdXRoLnVzZXJkZXRhaWxzLlVzZXJEZXRhaWxzSW1wbCQkTGFtYmRhLzB4MDAwMDAwNzAwMWJlZWQxMEAyYWY0ODIwZV0iLCJleHAiOjE3NDE3NTc3MzMsImlhdCI6MTc0MDU0ODEzM30.MKkcfkbDh2CM5LP1RKGJs1TAzJH-tRXuwlDXO-c39ANbDDeKeqeX37tyrivmtSjlLoPo506bgB04Or2MRCro6g
