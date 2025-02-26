@@ -3,11 +3,13 @@ package ex.jwtnew.global.security;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import ex.jwtnew.global.auth.filter.AuthFilter;
 import ex.jwtnew.global.auth.filter.LoginFilter;
+import ex.jwtnew.global.auth.filter.LogoutFilter;
 import ex.jwtnew.global.auth.filter.RefreshFilter;
 import ex.jwtnew.global.auth.handler.RefreshSuccessHandler;
 import ex.jwtnew.global.auth.provider.AccessTokenAuthenticationProvider;
 import ex.jwtnew.global.auth.provider.RefreshTokenAuthenticationProvider;
 import ex.jwtnew.global.auth.provider.UsernamePasswordAuthenticationProvider;
+import ex.jwtnew.global.redis.RedisUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
@@ -32,6 +34,7 @@ public class WebSecurityConfig {
 
     public static final String SIGNUP_URL = "/users/signup";
     public static final String LOGIN_URL = "/users/login";
+    public static final String LOGOUT_URL = "/users/logout";
     public static final String REFRESH_URL = "/users/refresh";
 
     private final RefreshTokenAuthenticationProvider refreshTokenAuthProvider;
@@ -66,9 +69,15 @@ public class WebSecurityConfig {
     }
 
     @Bean
+    public LogoutFilter logoutFilter(RedisUtil redisUtil) {
+        return new LogoutFilter(redisUtil);
+    }
+
+    @Bean
     public SecurityFilterChain securityFilterChain(
         HttpSecurity http,
         LoginFilter loginFilter,
+        LogoutFilter logoutFilter,
         AuthFilter authFilter,
         RefreshFilter refreshFilter
     ) throws Exception {
@@ -78,7 +87,8 @@ public class WebSecurityConfig {
         http.sessionManagement(manager -> manager.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
         http.addFilterBefore(loginFilter, UsernamePasswordAuthenticationFilter.class);
-        http.addFilterBefore(authFilter, LoginFilter.class);
+        http.addFilterBefore(logoutFilter, LoginFilter.class);
+        http.addFilterBefore(authFilter, LogoutFilter.class);
         http.addFilterBefore(refreshFilter, AuthFilter.class);
 
         http.authorizeHttpRequests(authz -> authz
