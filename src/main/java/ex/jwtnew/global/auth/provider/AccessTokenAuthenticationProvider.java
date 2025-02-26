@@ -1,6 +1,6 @@
 package ex.jwtnew.global.auth.provider;
 
-import ex.jwtnew.global.auth.authentication.JwtAuthentication;
+import ex.jwtnew.global.auth.authentication.AccessTokenAuthentication;
 import ex.jwtnew.global.auth.jwt.JwtStatus;
 import ex.jwtnew.global.auth.jwt.JwtUtil;
 import lombok.RequiredArgsConstructor;
@@ -14,31 +14,35 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpClientErrorException;
 
-@Slf4j(topic = "JwtAuthenticationProvider")
+@Slf4j(topic = "AccessTokenAuthenticationProvider")
 @Component
 @RequiredArgsConstructor
-public class JwtAuthenticationProvider implements AuthenticationProvider {
+public class AccessTokenAuthenticationProvider implements AuthenticationProvider {
 
     private final JwtUtil jwtUtil;
     private final UserDetailsService userDetailsService;
 
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
-        String tokenWithBearer = (String) authentication.getCredentials();
-        String token = jwtUtil.getTokenWithoutBearer(tokenWithBearer);
+        String token = getTokenWithoutBearer(authentication);
 
-        // 액세스 토큰 유효성 검사
-        JwtStatus tokenStatus = jwtUtil.validateToken(token);
-        validateTokenStatus(tokenStatus);
+        validateTokenStatus(token);
 
         String username = jwtUtil.getUsernameFromToken(token);
         UserDetails userDetails = userDetailsService.loadUserByUsername(username);
         // 로그아웃 여부 확인 후 예외처리
 
-        return new JwtAuthentication(username, token, userDetails.getAuthorities());
+        return new AccessTokenAuthentication(userDetails, token, userDetails.getAuthorities());
     }
 
-    private void validateTokenStatus(JwtStatus tokenStatus) {
+    private String getTokenWithoutBearer(Authentication authentication) {
+        String tokenWithBearer = (String) authentication.getCredentials();
+        return jwtUtil.getTokenWithoutBearer(tokenWithBearer);
+    }
+
+    private void validateTokenStatus(String token) {
+        JwtStatus tokenStatus = jwtUtil.validateToken(token);
+
         if (tokenStatus.equals(JwtStatus.INVALID)) {
             // 무효한 토큰 에러 응답
             throw new HttpClientErrorException(HttpStatusCode.valueOf(400));
@@ -52,6 +56,6 @@ public class JwtAuthenticationProvider implements AuthenticationProvider {
 
     @Override
     public boolean supports(Class<?> authentication) {
-        return JwtAuthentication.class.isAssignableFrom(authentication);
+        return AccessTokenAuthentication.class.isAssignableFrom(authentication);
     }
 }
