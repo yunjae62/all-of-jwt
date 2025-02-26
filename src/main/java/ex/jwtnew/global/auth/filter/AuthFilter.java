@@ -1,6 +1,6 @@
 package ex.jwtnew.global.auth.filter;
 
-import ex.jwtnew.global.auth.authentication.JwtAuthenticationToken;
+import ex.jwtnew.global.auth.authentication.JwtAuthentication;
 import ex.jwtnew.global.auth.jwt.JwtStatus;
 import ex.jwtnew.global.auth.jwt.JwtUtil;
 import jakarta.servlet.FilterChain;
@@ -16,7 +16,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-@Slf4j(topic = "JwtAuthFilter")
+@Slf4j(topic = "AuthFilter")
 @RequiredArgsConstructor
 public class AuthFilter extends OncePerRequestFilter {
 
@@ -43,14 +43,15 @@ public class AuthFilter extends OncePerRequestFilter {
 
         // 액세스 토큰 유효성 검사
         JwtStatus accessTokenStatus = jwtUtil.validateToken(accessToken);
+
         if (accessTokenStatus != JwtStatus.VALID) {
             log.warn("Invalid access token: {}", accessTokenStatus);
             filterChain.doFilter(request, response);
             return;
         }
 
-        // JwtAuthenticationToken을 생성 (여기서는 리프레시 토큰이 없으므로 null 전달)
-        Authentication jwtAuthToken = new JwtAuthenticationToken(accessToken, null);
+        // JwtAuthenticationToken을 생성
+        Authentication jwtAuthToken = new JwtAuthentication(accessToken);
 
         // AuthenticationManager를 통해 인증 처리
         Authentication authResult = authenticationManager.authenticate(jwtAuthToken);
