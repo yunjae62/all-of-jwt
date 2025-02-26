@@ -3,6 +3,7 @@ package ex.jwtnew.global.auth.provider;
 import ex.jwtnew.global.auth.authentication.RefreshTokenAuthentication;
 import ex.jwtnew.global.auth.jwt.JwtStatus;
 import ex.jwtnew.global.auth.jwt.JwtUtil;
+import ex.jwtnew.global.redis.RedisUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatusCode;
@@ -19,6 +20,7 @@ import org.springframework.web.client.HttpClientErrorException;
 @RequiredArgsConstructor
 public class RefreshTokenAuthenticationProvider implements AuthenticationProvider {
 
+    private final RedisUtil redisUtil;
     private final JwtUtil jwtUtil;
     private final UserDetailsService userDetailsService;
 
@@ -30,6 +32,8 @@ public class RefreshTokenAuthenticationProvider implements AuthenticationProvide
 
         String username = jwtUtil.getUsernameFromToken(token);
         UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+
+        validateSameRefreshToken(username, token);
 
         return new RefreshTokenAuthentication(userDetails, token, userDetails.getAuthorities());
     }
@@ -49,6 +53,15 @@ public class RefreshTokenAuthenticationProvider implements AuthenticationProvide
 
         if (tokenStatus.equals(JwtStatus.EXPIRED)) {
             // 재로그인 에러 응답
+            throw new HttpClientErrorException(HttpStatusCode.valueOf(401));
+        }
+    }
+
+    private void validateSameRefreshToken(String username, String token) {
+        String tokenInRedis = redisUtil.get(username, String.class)
+            .orElseThrow(() -> new HttpClientErrorException(HttpStatusCode.valueOf(401))); // 로그아웃
+
+        if (!tokenInRedis.equals(token)) { // 다른 리프레쉬 토큰
             throw new HttpClientErrorException(HttpStatusCode.valueOf(401));
         }
     }
