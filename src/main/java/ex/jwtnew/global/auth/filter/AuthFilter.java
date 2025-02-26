@@ -40,6 +40,6 @@ public class AuthFilter extends OncePerRequestFilter {
         Authentication postAuthentication = authenticationManager.authenticate(preAuthentication);
         SecurityContextHolder.getContext().setAuthentication(postAuthentication);
 
-//        filterChain.doFilter(request, response);
+        filterChain.doFilter(request, response);
     }
 }
