@@ -4,13 +4,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import ex.jwtnew.global.auth.filter.AuthFilter;
 import ex.jwtnew.global.auth.filter.LoginFilter;
 import ex.jwtnew.global.auth.jwt.JwtUtil;
+import ex.jwtnew.global.auth.provider.JwtAuthenticationProvider;
+import ex.jwtnew.global.auth.provider.UsernamePasswordAuthenticationProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -18,6 +20,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
@@ -26,6 +29,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class WebSecurityConfig {
 
     private final JwtUtil jwtUtil;
+    private final JwtAuthenticationProvider jwtAuthenticationProvider;
+    private final UsernamePasswordAuthenticationProvider usernamePasswordAuthenticationProvider;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -33,19 +38,19 @@ public class WebSecurityConfig {
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
-        return configuration.getAuthenticationManager();
+    public AuthenticationManager authenticationManager() {
+        return new ProviderManager(jwtAuthenticationProvider, usernamePasswordAuthenticationProvider);
     }
 
     @Bean
-    public AuthFilter jwtAuthFilter(AuthenticationManager authenticationManager) {
-        return new AuthFilter(jwtUtil, authenticationManager);
+    public AuthFilter authFilter() {
+        return new AuthFilter(jwtUtil, authenticationManager());
     }
 
     @Bean
-    public LoginFilter loginFilter(AuthenticationManager authenticationManager, ObjectMapper objectMapper) {
-        LoginFilter filter = new LoginFilter(jwtUtil, objectMapper);
-        filter.setAuthenticationManager(authenticationManager);
+    public LoginFilter loginFilter(ObjectMapper objectMapper, AuthenticationSuccessHandler loginSuccessHandler) {
+        LoginFilter filter = new LoginFilter(objectMapper, loginSuccessHandler);
+        filter.setAuthenticationManager(authenticationManager());
         return filter;
     }
 
