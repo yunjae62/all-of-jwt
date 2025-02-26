@@ -3,6 +3,7 @@ package ex.jwtnew.global.auth.provider;
 import ex.jwtnew.global.auth.authentication.AccessTokenAuthentication;
 import ex.jwtnew.global.auth.jwt.JwtStatus;
 import ex.jwtnew.global.auth.jwt.JwtUtil;
+import ex.jwtnew.global.redis.RedisUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatusCode;
@@ -19,6 +20,7 @@ import org.springframework.web.client.HttpClientErrorException;
 @RequiredArgsConstructor
 public class AccessTokenAuthenticationProvider implements AuthenticationProvider {
 
+    private final RedisUtil redisUtil;
     private final JwtUtil jwtUtil;
     private final UserDetailsService userDetailsService;
 
@@ -31,6 +33,8 @@ public class AccessTokenAuthenticationProvider implements AuthenticationProvider
         String username = jwtUtil.getUsernameFromToken(token);
         UserDetails userDetails = userDetailsService.loadUserByUsername(username);
         // 로그아웃 여부 확인 후 예외처리
+
+        validateLogout(username);
 
         return new AccessTokenAuthentication(userDetails, token, userDetails.getAuthorities());
     }
@@ -52,6 +56,11 @@ public class AccessTokenAuthenticationProvider implements AuthenticationProvider
             // 리프레쉬 하라는 에러 응답
             throw new HttpClientErrorException(HttpStatusCode.valueOf(401));
         }
+    }
+
+    private void validateLogout(String username) {
+        redisUtil.get(username, String.class)
+            .orElseThrow(() -> new HttpClientErrorException(HttpStatusCode.valueOf(401)));
     }
 
     @Override
