@@ -3,7 +3,10 @@ package ex.jwtnew.global.security;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import ex.jwtnew.global.auth.filter.AuthFilter;
 import ex.jwtnew.global.auth.filter.LoginFilter;
-import ex.jwtnew.global.auth.provider.JwtAuthenticationProvider;
+import ex.jwtnew.global.auth.filter.RefreshFilter;
+import ex.jwtnew.global.auth.handler.RefreshSuccessHandler;
+import ex.jwtnew.global.auth.provider.AccessTokenAuthenticationProvider;
+import ex.jwtnew.global.auth.provider.RefreshTokenAuthenticationProvider;
 import ex.jwtnew.global.auth.provider.UsernamePasswordAuthenticationProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
@@ -27,8 +30,13 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @RequiredArgsConstructor
 public class WebSecurityConfig {
 
-    private final JwtAuthenticationProvider jwtAuthenticationProvider;
-    private final UsernamePasswordAuthenticationProvider usernamePasswordAuthenticationProvider;
+    public static final String SIGNUP_URL = "/users/signup";
+    public static final String LOGIN_URL = "/users/login";
+    public static final String REFRESH_URL = "/users/refresh";
+
+    private final RefreshTokenAuthenticationProvider refreshTokenAuthProvider;
+    private final AccessTokenAuthenticationProvider accessTokenAuthProvider;
+    private final UsernamePasswordAuthenticationProvider usernamePasswordAuthProvider;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -37,7 +45,12 @@ public class WebSecurityConfig {
 
     @Bean
     public AuthenticationManager authenticationManager() {
-        return new ProviderManager(jwtAuthenticationProvider, usernamePasswordAuthenticationProvider);
+        return new ProviderManager(refreshTokenAuthProvider, accessTokenAuthProvider, usernamePasswordAuthProvider);
+    }
+
+    @Bean
+    public RefreshFilter refreshFilter(RefreshSuccessHandler refreshSuccessHandler) {
+        return new RefreshFilter(refreshSuccessHandler, authenticationManager());
     }
 
     @Bean
@@ -56,19 +69,22 @@ public class WebSecurityConfig {
     public SecurityFilterChain securityFilterChain(
         HttpSecurity http,
         LoginFilter loginFilter,
-        AuthFilter authFilter
+        AuthFilter authFilter,
+        RefreshFilter refreshFilter
     ) throws Exception {
 
         http.csrf(AbstractHttpConfigurer::disable);
 
         http.sessionManagement(manager -> manager.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
-        http.addFilterBefore(authFilter, LoginFilter.class);
         http.addFilterBefore(loginFilter, UsernamePasswordAuthenticationFilter.class);
+        http.addFilterBefore(authFilter, LoginFilter.class);
+        http.addFilterBefore(refreshFilter, AuthFilter.class);
 
         http.authorizeHttpRequests(authz -> authz
             .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
-            .requestMatchers(HttpMethod.POST, "/users/signup").permitAll()
+            .requestMatchers(HttpMethod.POST, SIGNUP_URL).permitAll()
+            .requestMatchers(HttpMethod.POST, REFRESH_URL).permitAll()
             .anyRequest().authenticated()
         );
 
