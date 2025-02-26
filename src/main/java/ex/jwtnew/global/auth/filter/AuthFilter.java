@@ -1,7 +1,6 @@
 package ex.jwtnew.global.auth.filter;
 
 import ex.jwtnew.global.auth.authentication.JwtAuthentication;
-import ex.jwtnew.global.auth.jwt.JwtStatus;
 import ex.jwtnew.global.auth.jwt.JwtUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -20,7 +19,6 @@ import org.springframework.web.filter.OncePerRequestFilter;
 @RequiredArgsConstructor
 public class AuthFilter extends OncePerRequestFilter {
 
-    private final JwtUtil jwtUtil;
     private final AuthenticationManager authenticationManager;
 
     @Override
@@ -29,35 +27,18 @@ public class AuthFilter extends OncePerRequestFilter {
         HttpServletResponse response,
         FilterChain filterChain
     ) throws ServletException, IOException {
-
-        // 헤더에서 액세스 토큰 추출 (Bearer 접두어 제거)
-        String header = request.getHeader(JwtUtil.ACCESS_TOKEN_HEADER);
-        String accessToken = jwtUtil.getTokenWithoutBearer(header);
-        log.info("accessToken : {}", accessToken);
+        String authenticationHeader = request.getHeader(JwtUtil.ACCESS_TOKEN_HEADER);
+        log.info("Authentication : {}", authenticationHeader);
 
         // 토큰이 없으면 인증 처리 없이 다음 필터로 전달
-        if (!StringUtils.hasText(accessToken)) {
+        if (!StringUtils.hasText(authenticationHeader)) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        // 액세스 토큰 유효성 검사
-        JwtStatus accessTokenStatus = jwtUtil.validateToken(accessToken);
-
-        if (accessTokenStatus != JwtStatus.VALID) {
-            log.warn("Invalid access token: {}", accessTokenStatus);
-            filterChain.doFilter(request, response);
-            return;
-        }
-
-        // JwtAuthenticationToken을 생성
-        Authentication jwtAuthToken = new JwtAuthentication(accessToken);
-
-        // AuthenticationManager를 통해 인증 처리
-        Authentication authResult = authenticationManager.authenticate(jwtAuthToken);
-
-        // 인증 결과를 SecurityContext에 설정
-        SecurityContextHolder.getContext().setAuthentication(authResult);
+        Authentication preAuthentication = new JwtAuthentication(authenticationHeader);
+        Authentication postAuthentication = authenticationManager.authenticate(preAuthentication);
+        SecurityContextHolder.getContext().setAuthentication(postAuthentication);
 
         filterChain.doFilter(request, response);
     }
