@@ -3,7 +3,6 @@ package ex.jwtnew.global.security;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import ex.jwtnew.global.auth.filter.AuthFilter;
 import ex.jwtnew.global.auth.filter.LoginFilter;
-import ex.jwtnew.global.auth.jwt.JwtUtil;
 import ex.jwtnew.global.auth.provider.JwtAuthenticationProvider;
 import ex.jwtnew.global.auth.provider.UsernamePasswordAuthenticationProvider;
 import lombok.RequiredArgsConstructor;
@@ -28,7 +27,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @RequiredArgsConstructor
 public class WebSecurityConfig {
 
-    private final JwtUtil jwtUtil;
     private final JwtAuthenticationProvider jwtAuthenticationProvider;
     private final UsernamePasswordAuthenticationProvider usernamePasswordAuthenticationProvider;
 
@@ -44,7 +42,7 @@ public class WebSecurityConfig {
 
     @Bean
     public AuthFilter authFilter() {
-        return new AuthFilter(jwtUtil, authenticationManager());
+        return new AuthFilter(authenticationManager());
     }
 
     @Bean
