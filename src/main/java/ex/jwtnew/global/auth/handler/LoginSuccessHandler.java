@@ -1,7 +1,6 @@
 package ex.jwtnew.global.auth.handler;
 
 import ex.jwtnew.global.auth.jwt.JwtUtil;
-import ex.jwtnew.global.auth.userdetails.UserDetailsImpl;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -11,13 +10,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class JwtLoginSuccessHandler implements AuthenticationSuccessHandler {
+public class LoginSuccessHandler implements AuthenticationSuccessHandler {
 
     private final JwtUtil jwtUtil;
 
@@ -39,9 +39,8 @@ public class JwtLoginSuccessHandler implements AuthenticationSuccessHandler {
         response.getWriter().write(result);
     }
 
-
     private void getResponseDtoWithTokensInHeader(Authentication authentication, HttpServletResponse response) {
-        UserDetailsImpl principal = (UserDetailsImpl) authentication.getPrincipal();
+        UserDetails principal = (UserDetails) authentication.getPrincipal();
         String username = principal.getUsername();
         String role = List.of(principal.getAuthorities()).getFirst().toString();
 
