@@ -22,7 +22,7 @@ public class UsernamePasswordAuthenticationProvider implements AuthenticationPro
         String username = (String) authentication.getPrincipal();
         UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
-        return new UsernamePasswordAuthenticationToken(username, userDetails.getPassword(), userDetails.getAuthorities());
+        return new UsernamePasswordAuthenticationToken(userDetails, userDetails.getPassword(), userDetails.getAuthorities());
     }
 
     @Override
