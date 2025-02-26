@@ -19,15 +19,9 @@ public class UsernamePasswordAuthenticationProvider implements AuthenticationPro
 
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
-        UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken) authentication;
-        String username = (String) token.getPrincipal();
+        String username = (String) authentication.getPrincipal();
         UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
-        if (userDetails == null) {
-            throw new RuntimeException("사용자 정보를 찾을 수 없습니다: " + username);
-        }
-
-        log.info("Authenticated user: {}", username);
         return new UsernamePasswordAuthenticationToken(username, userDetails.getPassword(), userDetails.getAuthorities());
     }
 
