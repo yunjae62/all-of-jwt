@@ -9,7 +9,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 @Slf4j
@@ -31,9 +30,8 @@ public class RefreshSuccessHandler {
     }
 
     private void getResponseDtoWithTokensInHeader(Authentication authentication, HttpServletResponse response) {
-        UserDetails principal = (UserDetails) authentication.getPrincipal();
-        String username = principal.getUsername();
-        String role = List.of(principal.getAuthorities()).getFirst().toString();
+        String username = authentication.getName();
+        String role = List.of(authentication.getAuthorities()).getFirst().toString();
 
         String accessToken = jwtUtil.createAccessToken(username, role);
         String refreshToken = jwtUtil.createRefreshToken(username, role);
