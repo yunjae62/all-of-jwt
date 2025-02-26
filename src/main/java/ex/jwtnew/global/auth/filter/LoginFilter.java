@@ -2,6 +2,7 @@ package ex.jwtnew.global.auth.filter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import ex.jwtnew.domain.user.dto.UserLoginReq;
+import ex.jwtnew.global.security.WebSecurityConfig;
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -26,7 +27,7 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
     @PostConstruct
     public void setup() {
         this.setAuthenticationSuccessHandler(loginSuccessHandler);
-        setFilterProcessesUrl("/users/login");
+        setFilterProcessesUrl(WebSecurityConfig.LOGIN_URL);
     }
 
     @Override
