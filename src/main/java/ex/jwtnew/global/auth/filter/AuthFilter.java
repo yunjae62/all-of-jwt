@@ -1,6 +1,6 @@
 package ex.jwtnew.global.auth.filter;
 
-import ex.jwtnew.global.auth.authentication.JwtAuthentication;
+import ex.jwtnew.global.auth.authentication.AccessTokenAuthentication;
 import ex.jwtnew.global.auth.jwt.JwtUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -28,7 +28,7 @@ public class AuthFilter extends OncePerRequestFilter {
         FilterChain filterChain
     ) throws ServletException, IOException {
         String authenticationHeader = request.getHeader(JwtUtil.ACCESS_TOKEN_HEADER);
-        log.info("Authentication : {}", authenticationHeader);
+        log.info("Access-Token : {}", authenticationHeader);
 
         // 토큰이 없으면 인증 처리 없이 다음 필터로 전달
         if (!StringUtils.hasText(authenticationHeader)) {
@@ -36,10 +36,10 @@ public class AuthFilter extends OncePerRequestFilter {
             return;
         }
 
-        Authentication preAuthentication = new JwtAuthentication(authenticationHeader);
+        Authentication preAuthentication = new AccessTokenAuthentication(authenticationHeader);
         Authentication postAuthentication = authenticationManager.authenticate(preAuthentication);
         SecurityContextHolder.getContext().setAuthentication(postAuthentication);
 
-        filterChain.doFilter(request, response);
+//        filterChain.doFilter(request, response);
     }
 }
