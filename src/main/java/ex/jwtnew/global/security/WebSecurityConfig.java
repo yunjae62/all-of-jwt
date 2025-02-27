@@ -2,6 +2,7 @@ package ex.jwtnew.global.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import ex.jwtnew.global.auth.filter.AuthFilter;
+import ex.jwtnew.global.auth.filter.ExceptionFilter;
 import ex.jwtnew.global.auth.filter.LoginFilter;
 import ex.jwtnew.global.auth.filter.LogoutFilter;
 import ex.jwtnew.global.auth.filter.RefreshFilter;
@@ -74,12 +75,18 @@ public class WebSecurityConfig {
     }
 
     @Bean
+    public ExceptionFilter exceptionFilter(ObjectMapper objectMapper) {
+        return new ExceptionFilter(objectMapper);
+    }
+
+    @Bean
     public SecurityFilterChain securityFilterChain(
         HttpSecurity http,
         LoginFilter loginFilter,
         LogoutFilter logoutFilter,
         AuthFilter authFilter,
-        RefreshFilter refreshFilter
+        RefreshFilter refreshFilter,
+        ExceptionFilter exceptionFilter
     ) throws Exception {
 
         http.csrf(AbstractHttpConfigurer::disable);
@@ -90,6 +97,7 @@ public class WebSecurityConfig {
         http.addFilterBefore(logoutFilter, LoginFilter.class);
         http.addFilterBefore(authFilter, LogoutFilter.class);
         http.addFilterBefore(refreshFilter, AuthFilter.class);
+        http.addFilterBefore(exceptionFilter, RefreshFilter.class);
 
         http.authorizeHttpRequests(authz -> authz
             .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
